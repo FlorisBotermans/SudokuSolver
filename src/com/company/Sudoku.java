@@ -33,7 +33,7 @@ public class Sudoku {
                         }
                     }
 
-                    return false;
+                    return false; // Backtrack
                 }
             }
         }
@@ -101,8 +101,40 @@ public class Sudoku {
         return cells;
     }
 
-    private boolean isAllowed(int row, int col, int number, List<Cell> cells) {
-        return !(containsInRow(row, number) || containsInCol(col, number) || containsInBox(row, col, number) || containsInCage(cells, number));
+    private boolean cageNrExceeded(List<Cell> cellsInCage, int number) {
+        int wantedCageTotal = 0;
+        int i = 0;
+        while(wantedCageTotal == 0) {
+             wantedCageTotal = cellsInCage.get(i).getCageNumber();
+             i++;
+        }
+        int realCageTotal = number;
+        for (Cell c : cellsInCage) {
+            realCageTotal += c.getNumber();
+        }
+        return realCageTotal > wantedCageTotal;
+    }
+
+    // return false if whole cage is filled and nrs do not match
+    private boolean cageNrDoesNotMatchWhenWholeCageIsFilled(List<Cell> cellsInCage, int number) {
+        int wantedCageTotal = 0;
+        int i = 0;
+        while(wantedCageTotal == 0) {
+            wantedCageTotal = cellsInCage.get(i).getCageNumber();
+            i++;
+        }
+        int emptyCells = -1;
+        int realCageTotal = number;
+        for (Cell c : cellsInCage) {
+            if (c.getNumber() == 0) { emptyCells++; }
+            realCageTotal += c.getNumber();
+        }
+        boolean wholeCageFilled = emptyCells == 0;
+        return wholeCageFilled && realCageTotal != wantedCageTotal;
+    }
+
+    private boolean isAllowed(int row, int col, int number, List<Cell> cellsInCage) {
+        return !(containsInRow(row, number) || containsInCol(col, number) || containsInBox(row, col, number) || containsInCage(cellsInCage, number) || cageNrExceeded(cellsInCage, number) || cageNrDoesNotMatchWhenWholeCageIsFilled(cellsInCage, number));
     }
 
     public void displaySudoku() {
