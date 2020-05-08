@@ -7,11 +7,7 @@ public class Sudoku {
     private Cell[][] grid;
     private static final int UNASSIGNED = 0;
 
-    public Sudoku() {
-        grid = new Cell[9][9];
-    }
-
-    public Sudoku(Cell grid[][]) {
+    public Sudoku(Cell[][] grid) {
         this.grid = grid;
     }
 
@@ -20,25 +16,78 @@ public class Sudoku {
             for(int col = 0; col < 9; col++) {
                 if(grid[row][col].getNumber() == UNASSIGNED) {
                     List<Cell> cells = getCellsInSameCage(grid[row][col].getCageIndex());
-                    for(int number = 1; number <= 9; number ++) {
+
+                    List<Integer> possibleNumbers = grid[row][col].getPossibleNumbers();
+                    System.out.println(possibleNumbers);
+
+                    for(int number : new ArrayList<>(possibleNumbers)) {
                         if(isAllowed(row, col, number, cells)) {
                             grid[row][col].setNumber(number);
+                            deletePossibleNumbers(row, col, number);
 
                             if(solveSudoku()) {
                                 return true;
                             } else {
                                 grid[row][col].setNumber(UNASSIGNED);
+                                addPossibleNumbers(row, col, number);
                             }
-
                         }
                     }
-
                     return false; // Backtrack
                 }
             }
         }
-
         return true;
+    }
+
+    private void addPossibleNumbers(int row, int col, int number) {
+        // Add possibilities to row
+        for(int i = 0; i < 9; i++) {
+            if(!grid[row][i].getPossibleNumbers().contains(number)){
+                grid[row][i].addPossibleNumber(number);
+            }
+        }
+
+        // Add possibilities to col
+        for(int i = 0; i < 9; i++) {
+            if(!grid[i][col].getPossibleNumbers().contains(number)){
+                grid[i][col].addPossibleNumber(number);
+            }
+        }
+
+        // Add possibilities to box
+        int r = row - row % 3;
+        int c = col - col % 3;
+
+        for(int i = r; i < r + 3; i++) {
+            for(int j = c; j < c + 3; j++) {
+                if(!grid[i][j].getPossibleNumbers().contains(number)){
+                    grid[i][j].addPossibleNumber(number);
+                }
+            }
+        }
+    }
+
+    private void deletePossibleNumbers(int row, int col, int number) {
+        // Delete possibilities from row
+        for(int i = 0; i < 9; i++) {
+            grid[row][i].deletePossibleNumber(number);
+        }
+
+        // Delete possibilities from col
+        for(int i = 0; i < 9; i++) {
+            grid[i][col].deletePossibleNumber(number);
+        }
+
+        // Delete possibilities from box
+        int r = row - row % 3;
+        int c = col - col % 3;
+
+        for(int i = r; i < r + 3; i++) {
+            for(int j = c; j < c + 3; j++) {
+                grid[i][j].deletePossibleNumber(number);
+            }
+        }
     }
 
     private boolean containsInRow(int row, int number) {
@@ -48,7 +97,6 @@ public class Sudoku {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -58,7 +106,6 @@ public class Sudoku {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -73,7 +120,6 @@ public class Sudoku {
                 }
             }
         }
-
         return false;
     }
 
@@ -83,7 +129,6 @@ public class Sudoku {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -97,7 +142,6 @@ public class Sudoku {
                 }
             }
         }
-
         return cells;
     }
 
